@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "./app";
 import { NewChatView } from "./features/chat/pages/new-chat-view";
+import { ChatView } from "./features/chat/pages/chat-view";
 
 export const router = createBrowserRouter([
   {
@@ -12,6 +13,7 @@ export const router = createBrowserRouter([
         element: <NewChatView/>
       },{
         path: "chat/:chatId",
+        element: <ChatView/>
       }
     ]
   }
