@@ -1,6 +1,6 @@
 import { apiGet } from "../../../core/api";
 import { env } from "../../../env";
-import type { Message } from "../types/chat";
+import type { OllamaMessage } from "../types/chat";
 
 export interface LLMModel {
   name: string;
@@ -28,7 +28,7 @@ export async function getLLMModels() {
   return response.models;
 }
 
-export async function* streamChat({model, messages}: {model: string, messages: Message[]}){
+export async function* streamChat({model, messages}: {model: string, messages: OllamaMessage[]}){
   const response = await fetch(`${env.OLLAMA_URL}/api/chat`,
     {
       method: "POST",
@@ -38,7 +38,6 @@ export async function* streamChat({model, messages}: {model: string, messages: M
       body: JSON.stringify({
         model: model,
         messages: messages,
-        format: "json",
         stream: true,
       }),
     }

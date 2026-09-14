@@ -1,33 +1,47 @@
 import { useModelStore } from "@/features/side-bar/stores/model-store";
-import { streamChat } from "../api/ollama-api";
+import { useChatStore } from "../stores/chat-store";
+import type { ChatMessage } from "../types/chat";
+import { sendMessages } from "../services/chat-service";
 
 export function useChat() {
-  const sendMessage = async (message: string) => {
-    console.log("Sending message:", message);
-    const selectedModel = useModelStore.getState().selectedModel;
-    if(!selectedModel){
-      return;
-    }
 
-    const stream = await streamChat({
-      model: selectedModel,
-      messages: [{
-        role: "user",
-        content: message,
-      }]
+  const startNewChat = (content: string) => {
+    const chatId = crypto.randomUUID();
+    const message: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content,
+    };
+
+    useChatStore.getState().addNewChat({
+      id: chatId,
+      messages: [message]
     });
 
-    for await (const chunk of stream) {
-      const content = chunk.message?.content;
-      if (!content) {
-        continue;
-      }
+    //Fire and forget so the streaming will happen in the background and the caller
+    //does not need to wait for the streaming to complete.
+    startStreaming(chatId);
 
-      console.log("Received content:", content);
+    return chatId;
+  }
+
+  const startStreaming =  async (chatId: string) => {
+    const model = useModelStore.getState().selectedModel;
+    if(!model){
+      throw new Error("Please select a model.");
     }
+
+    const chat = useChatStore.getState().chats.find(c => c.id === chatId);
+    if(!chat){
+      throw new Error("Cannot find the specific chat.");
+    }
+
+    await sendMessages(model, chat.messages, (data: string) => {
+      console.log(data);
+    })
   }
 
   return {
-    sendMessage,
+    startNewChat
   }
 }
